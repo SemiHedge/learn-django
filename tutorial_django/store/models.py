@@ -1,7 +1,12 @@
+from ast import Mod
 from pyexpat import model
 from django.db import models
 
-# Create your models here.
+
+class Category(models.Model):
+    title = models.CharField(max_length=255)
+
+
 class Product(models.Model):
     sku = models.CharField(max_length=10, primary_key=True)
     title = models.CharField(max_length=255) 
@@ -9,6 +14,7 @@ class Product(models.Model):
     price = models.DecimalField(max_digit=5, decimal_places=2)
     inventory = models.IntegerField()
     last_update = models.DateTimeField(auto_now=True)
+    category = models.ForeignKey(Category, on_delete=models.PROTECT)
 
 
 class Customer(models.Model):
@@ -30,6 +36,12 @@ class Customer(models.Model):
     membership = models.CharField(max_length=1, choices=MEMBERSHIP_CHOICES, default=MEMBERSHIP_BRONZE)
 
 
+class Address(models.Model):
+    street = models.CharField(max_length=255)
+    city = models.CharField(max_length=255)
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+
+
 class Order(models.Model):
     ORDER_STATUS_PENDING = 'P'
     ORDER_STATUS_FAILED = 'F'
@@ -43,9 +55,21 @@ class Order(models.Model):
 
     placed_at = models.DateTimeField(auto_now_add=True)
     order_status = models.CharField(max_length=1, choices=ORDER_STATUS_CHOICES, default=ORDER_STATUS_PENDING)
+    customer = models.ForeignKey(Customer, on_delete=models.PROTECT)
 
 
-class Address(models.Model):
-    street = models.CharField(max_length=255)
-    city = models.CharField(max_length=255)
-    customer = models.OneToOneField(Customer, on_delete=models.CASCADE, primary_key=True)
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.PROTECT)
+    product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    quantity = models.PositiveSmallIntegerField()
+    unit_price = models.DecimalField(max_digit=5, decimal_places=2)
+
+
+class Cart(models.Model):
+    create_at = models.DateTimeField(auto_now_add=True)
+
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(Order, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveSmallIntegerField()
